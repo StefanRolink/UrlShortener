@@ -10,6 +10,8 @@ import pyshorteners
 import pyperclip
 
 from urllib3.exceptions import ReadTimeoutError
+from requests.exceptions import ReadTimeout
+from socket import timeout
 
 
 def init_argparser() -> argparse.ArgumentParser:
@@ -65,11 +67,11 @@ def main() -> None:
 
     try:
         short_url = shorten(args.url, args.shortner)
-    except ReadTimeoutError:
-        print(f'Warning: {args.url} does not seem to exsist.')
-
-    copy_to_clipboard(short_url)
-    print(short_url)
+    except (ReadTimeoutError, ReadTimeout, timeout):
+        print(f'Error: {args.url} does not seem to exsist.')
+    else:
+        copy_to_clipboard(short_url)
+        print(short_url)
 
 
 if __name__ == '__main__':
