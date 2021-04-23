@@ -1,2 +1,2 @@
 # UrlShortener
-Simple command URL shortner
+Simple command-line URL shortner
