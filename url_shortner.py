@@ -9,9 +9,8 @@ import argparse
 import pyshorteners
 import pyperclip
 
-from urllib3.exceptions import ReadTimeoutError
 from requests.exceptions import ReadTimeout
-from socket import timeout
+from urllib3.exceptions import ReadTimeoutError
 
 
 def init_argparser() -> argparse.ArgumentParser:
@@ -19,8 +18,9 @@ def init_argparser() -> argparse.ArgumentParser:
     shorteners_list = pyshorteners.Shortener().available_shorteners
 
     parser = argparse.ArgumentParser(description='Small tiny url tool to shorten url')
-    parser.add_argument('shortner', choices=shorteners_list, default='tinyurl', nargs='?', help='The chosen url shortner.')
-    parser.add_argument('-u', '--url', dest='url', type=str, required=True, help='The URL to shorten.')
+    parser.add_argument('url', type=str, help='The URL to shorten.')
+    parser.add_argument('-s', '--shortener', dest='shortener', type=str, choices=shorteners_list,
+                        default='tinyurl', nargs='?', help='The chosen url shortener.')
     return parser
 
 
@@ -66,9 +66,17 @@ def main() -> None:
     args = parser.parse_args()
 
     try:
-        short_url = shorten(args.url, args.shortner)
-    except (ReadTimeoutError, ReadTimeout, timeout):
-        print(f'Error: {args.url} does not seem to exsist.')
+        short_url = shorten(args.url, args.shortener)
+    except (ReadTimeoutError, ReadTimeout, OSError):
+        print(f'Warning: {args.url} does not seem to exsist.')
+        try:
+            # When url didn't exsist, try again, it will mosst likeley succeed this time:
+            short_url = shorten(args.url, args.shortener)
+        except (ReadTimeoutError, ReadTimeout, OSError):
+            print('Error occured')
+        else:
+            copy_to_clipboard(short_url)
+            print(short_url)
     else:
         copy_to_clipboard(short_url)
         print(short_url)
